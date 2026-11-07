@@ -6,6 +6,9 @@
 #ifndef __AVR__
 #include <functional>
 #endif
+#if defined(ESP32)
+#include <esp_task_wdt.h>
+#endif
 
 #include "../bot_config.h"
 #include "Fetcher.h"
@@ -271,6 +274,7 @@ class Core : public Http {
         if (http.available()) {
             _poll_wait = 0;
             Result res = _parseResponse(http.getResponse());
+            http.stop();
             if (res && res.isArray()) {
                 _parseUpdates(res);
                 return 1;
@@ -356,20 +360,29 @@ class Core : public Http {
         }
 
         FB_ESP_YIELD();
+#if defined(ESP32)
+        esp_task_wdt_reset();
+#endif
         if (http.beginSend()) {
             if (sent) *sent = true;
             packet.printTo(http);
             _last_send = millis();
             FB_ESP_YIELD();
+#if defined(ESP32)
+            esp_task_wdt_reset();
+#endif
             if (wait) {
                 FB_LOG("send + wait");
-                return _parseResponse(http.getResponse());
+                Result res = _parseResponse(http.getResponse());
+                http.stop();
+                return res;
             } else {
                 FB_LOG("send async");
             }
         } else {
             if (sent) *sent = false;
             FB_LOG("send error");
+            http.stop();
         }
         _last_send = millis();  // на случай долгого beginSend
         return Result();
@@ -503,6 +516,9 @@ class Core : public Http {
             }
         } else {
             FB_LOG("bad response");
+#ifdef FB_USE_LOG
+            FB_USE_LOG.printf("> [HTTP ERR] code: %d, type: %s\n", resp.code(), resp.type().c_str());
+#endif
         }
         return Result();
     }

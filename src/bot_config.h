@@ -8,6 +8,11 @@
 #define TELEGRAM_PORT 443                 // ssl порт
 #endif
 
+namespace fb {
+inline String custom_host = "";
+inline uint16_t custom_port = 0;
+}
+
 #define FB_BLOCK_SIZE 256                 // буфер файлов
 #define FB_LONG_POLL_TOUT 300             // пауза между long poll update
 

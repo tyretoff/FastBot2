@@ -15,6 +15,8 @@ class Http {
         http.setHost(host, port);
         _ip.fromString(host);
         _port = port;
+        custom_host = host;
+        custom_port = port;
     }
 
     // установить proxy
@@ -22,6 +24,8 @@ class Http {
         http.setHost(ip, port);
         _ip = ip;
         _port = port;
+        custom_host = ip.toString();
+        custom_port = port;
     }
 
     // получить proxy IP
@@ -37,6 +41,8 @@ class Http {
     // удалить proxy
     void clearProxy() {
         http.setHost(TELEGRAM_HOST, TELEGRAM_PORT);
+        custom_host = "";
+        custom_port = 0;
     }
 
    protected:

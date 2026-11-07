@@ -68,9 +68,10 @@ class Packet : public gson::Str {
         concat(token);
         concat('/');
         concat(path);
-        concat(F(
-            " HTTP/1.1\r\n"
-            "Host: " TELEGRAM_HOST "\r\n\r\n"));
+        concat(F(" HTTP/1.1\r\nHost: "));
+        if (custom_host.length()) concat(custom_host);
+        else concat(F(TELEGRAM_HOST));
+        concat(F("\r\n\r\n"));
     }
 
     // query string
@@ -103,13 +104,10 @@ class Packet : public gson::Str {
                 len += SL("Content-Disposition: form-data; name=\"") + formName.length() + SL("\"; filename=\"") + fileName.length() + SL("\"\r\n\r\n");
                 len += SL("\r\n--" FB_BOUNDARY "--");
 
-                concat(F(
-                    " HTTP/1.1\r\n"
-                    "Host: " TELEGRAM_HOST
-                    "\r\n"
-                    "Content-Type: multipart/form-data; boundary=" FB_BOUNDARY
-                    "\r\n"
-                    "Content-Length: "));
+                concat(F(" HTTP/1.1\r\nHost: "));
+                if (custom_host.length()) concat(custom_host);
+                else concat(F(TELEGRAM_HOST));
+                concat(F("\r\nContent-Type: multipart/form-data; boundary=" FB_BOUNDARY "\r\nContent-Length: "));
                 concat(len);
                 concat(F(
                     "\r\n\r\n"
@@ -163,17 +161,24 @@ class Packet : public gson::Str {
     bool _qs_first = 1;
 
     void _beginPost(const __FlashStringHelper* cmd, const String& token) {
-        concat(F("POST https://" TELEGRAM_HOST "/bot"));
+        uint16_t port = custom_port ? custom_port : TELEGRAM_PORT;
+        if (port == 80) {
+            concat(F("POST /bot"));
+        } else {
+            concat(F("POST https://"));
+            if (custom_host.length()) concat(custom_host);
+            else concat(F(TELEGRAM_HOST));
+            concat(F("/bot"));
+        }
         concat(token);
         concat('/');
         concat(cmd);
     }
     void _beginHeaders() {
-        concat(F(
-            " HTTP/1.1\r\n"
-            "Host: " TELEGRAM_HOST
-            "\r\n"
-            "Cache-Control: no-cache\r\n"));
+        concat(F(" HTTP/1.1\r\nHost: "));
+        if (custom_host.length()) concat(custom_host);
+        else concat(F(TELEGRAM_HOST));
+        concat(F("\r\nCache-Control: no-cache\r\n"));
     }
     void _jsonHeaders() {
         concat(F(
